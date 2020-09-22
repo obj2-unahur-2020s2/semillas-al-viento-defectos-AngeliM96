@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
@@ -16,16 +17,16 @@ class SemillasAlVientoTest : DescribeSpec({
         val soja2 = Soja(2009, 0.846f)
         val soja3 = Soja(2008, 1.21f)
         val sojaTransgenica = SojaTransgenica(2008, 1.14f)
-        val parcela1 = Parcela(5, 3, 20)
+        // Tuve que hacer cambios a las alturas y horas de sol para poder establecer el escenario inicial sin problemas
+        val parcela1 = Parcela(5, 3, 6)
         parcela1.plantar(mentaConSemillas)
-        parcela1.plantar(soja3)
-        val parcela2 = Parcela(10, 2, 9)
+        parcela1.plantar(mentaConSemillas)
+        val parcela2 = Parcela(10, 2, 8)
         parcela2.plantar(soja1)
         parcela2.plantar(soja2)
-        val parcela3 = Parcela(5, 3, 7)
-        parcela3.plantar(mentaSinSemillas)
-        parcela3.plantar(mentaConSemillas)
-        parcela3.plantar(mentaSinSemillas)
+        // Modificado el escenario, había dos parcelas testeando las mismas funcionalidades innecesariamente, esta nueva testea el otro caso
+        // en que puede haber un throw exception y se utiliza en agricultora.
+        val parcela3 = Parcela(10, 5, 20)
 
 
         describe("Plantas"){
@@ -58,7 +59,7 @@ class SemillasAlVientoTest : DescribeSpec({
             }
             describe("Soja Transgenica"){
                 it("Fuerza"){
-                    sojaTransgenica.horasDeSolQuetolera().shouldBe(18)
+                    sojaTransgenica.horasDeSolQueTolera().shouldBe(18)
                     sojaTransgenica.esFuerte().shouldBeTrue()
                 }
                 it("Semillas"){
@@ -79,11 +80,13 @@ class SemillasAlVientoTest : DescribeSpec({
                     parcela1.tieneComplicaciones().shouldBeFalse()
                 }
                 it("Se puede plantar"){
-                    parcela1.cantidadPlantas.shouldBe(2)
-                    parcela1.plantar(soja3)
-                    parcela1.cantidadPlantas.shouldBe(3)
+                    // Cambiado cantidadPlantas por plantas.size al borrar la variable por ser innecesaria (redundancia minima)
+                    parcela1.plantas.size.shouldBe(2)
+                    parcela1.plantar(mentaConSemillas)
+                    parcela1.plantas.size.shouldBe(3)
                 }
             }
+
             describe("Parcela 2"){
                 it("Superficie"){
                     parcela2.superficie().shouldBe(20)
@@ -92,28 +95,36 @@ class SemillasAlVientoTest : DescribeSpec({
                     parcela2.cantidadMaximaPlantas().shouldBe(4)
                 }
                 it("Complicaciones"){
-                    parcela2.tieneComplicaciones().shouldBeFalse()
+                    parcela2.tieneComplicaciones().shouldBeTrue()
                 }
                 it("Se puede plantar"){
+                    parcela2.plantas.size.shouldBe(2)
+                    parcela2.plantar(soja3)
+                    parcela2.plantar(soja3)
+                    parcela2.plantas.size.shouldBe(4)
                     shouldThrowAny {
                         parcela2.plantar(sojaTransgenica)
                     }
                 }
             }
-            describe("Parcela 3"){
-                it("Superficie"){
-                    parcela3.superficie().shouldBe(15)
+
+            describe("Parcela 3") {
+                it("Superficie") {
+                    parcela3.superficie().shouldBe(50)
                 }
-                it("Cantidad de plantas"){
-                    parcela3.cantidadMaximaPlantas().shouldBe(3)
+                it("Cantidad de plantas") {
+                    parcela3.cantidadMaximaPlantas().shouldBe(10)
                 }
-                it("Complicaciones"){
+                it("Complicaciones") {
                     parcela3.tieneComplicaciones().shouldBeFalse()
                 }
-                it("Se puede plantar"){
+                it("Se puede plantar") {
                     shouldThrowAny {
                         parcela3.plantar(mentaConSemillas)
                     }
+                    parcela3.plantas.shouldBeEmpty()
+                    parcela3.plantar(sojaTransgenica)
+                    parcela3.plantas.size.shouldBe(1)
                 }
             }
         }
@@ -125,7 +136,7 @@ class SemillasAlVientoTest : DescribeSpec({
             }
             it("Plantar Estrategicamente"){
                 agricultora.plantarEstrategicamente(sojaTransgenica)
-                agricultora.parcelas.filter { it.plantas.contains(sojaTransgenica) }.shouldContainAll(listOf(parcela1))
+                agricultora.parcelas.filter { it.plantas.contains(sojaTransgenica) }.shouldContainAll(listOf(parcela3))
             }
         }
     }
