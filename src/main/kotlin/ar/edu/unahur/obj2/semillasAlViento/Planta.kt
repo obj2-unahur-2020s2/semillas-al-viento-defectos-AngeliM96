@@ -3,7 +3,7 @@ package ar.edu.unahur.obj2.semillasAlViento
 abstract class Planta(val anioObtencionSemilla: Int, val altura: Float) {
 
   abstract fun horasDeSolQueTolera(): Int
-  fun esFuerte() = this.horasDeSolQueTolera() > 10
+  open fun esFuerte() = this.horasDeSolQueTolera() > 10
   open fun daSemillas(): Boolean = this.esFuerte()
 }
 
